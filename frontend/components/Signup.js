@@ -4,6 +4,14 @@ import { useState } from 'react';
 
 const Signup = ({ signup }) => {
     //console.log('props.signup', props.signup);
+    const [user_name, setUserName] = useState('');
+    const [user_profile, setProfile] = useState('');
+    const signupClicked = () => {
+        console.log('signup clicked');
+        console.log('signup user_name', user_name);
+        console.log('signup user_profile', user_profile);
+        signup(user_name, user_profile);
+    }
     return (
         <div className={styles.authContainer}>
             <h1 className={styles.title}>Sign up to use Tiktok</h1>
@@ -13,7 +21,7 @@ const Signup = ({ signup }) => {
                         username
                     </div>
                     <div className={styles.inputContainer}>
-                        <input className={styles.input} type="text" />
+                        <input className={styles.input} type="text" onChange={e => setUserName(e.target.value)} />
                     </div>
                 </div>
                 <div className={styles.inputFiled}>
@@ -21,11 +29,11 @@ const Signup = ({ signup }) => {
                         Profile Image
                     </div>
                     <div className={styles.inputContainer}>
-                        <input className={styles.input} type="text" />
+                        <input className={styles.input} type="text" onChange={e => setProfile(e.target.value)} />
                     </div>
                 </div>
             </div>
-            <div className={styles.loginButton}>Signup</div>
+            <div className={styles.loginButton} onClick={() => signupClicked()}>Signup</div>
         </div>
     );
 }

@@ -32,7 +32,6 @@ const MainView = () => {
                 <div>Ticktok yes</div>
             ) : (
                 <Signup signup={signup} wallet={wallet.publicKey?.toBase58()} />)}
-
         </>
     )
 }
