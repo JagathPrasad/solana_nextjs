@@ -8,6 +8,10 @@ import { getProgramInstance } from '../utils/utils';
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import useAccount from '../hooks/useAccount';
 import useTiktok from '../hooks/useTiktok';
+import { BottomBar } from './BootmBar';
+import { Video } from './Video';
+import { UploadModal } from './UploadModal';
+
 const anchor = require('@project-serum/anchor');
 const utf8 = anchor.utils.utf8;
 const { BN, web3 } = anchor;
@@ -42,7 +46,8 @@ const MainView = () => {
             checkAccount();
             getTiktoks();
         }
-    }, []);
+    }, [wallet.connected]);
+
 
     const checkAccount = () => {
         let [user_pda] = await anchor.web3.PublicKey.findProgramAddress(
@@ -56,13 +61,47 @@ const MainView = () => {
             setAccount(true);
 
         } catch (e) {
-
+            setAccount(false);
         }
     }
     return (
         <>
             {isAccount ? (
-                <div>Ticktok yes</div>
+                <div>{newVideoShow && (
+                    <UploadModal
+                        description={description}
+                        videoUrl={videoUrl}
+                        newVideo={newVideo}
+                        setDescription={setDescription}
+                        setVideoUrl={setVideoUrl}
+                        setNewVideoShow={setNewVideoShow}
+                    />
+                )}
+                    <div className={styles.appVideos}>
+                        {tiktoks.length === 0 ? (
+                            <h1>No Videos</h1>
+                        ) : tiktoks.map((tiktok, id) => {
+                            <Video
+                                key={id}
+                                address={tiktok.publicKey}
+                                url={tiktok.account.video}
+                                channel={tiktok.account.creatorName}
+                                index={tiktok.account.index.toNumber()}
+                                likes={tiktok.account.likes}
+                                description={tiktok.account.description}
+                                likeVideo={likeVideo}
+                                likesAddress={tiktok.account.peopleWhoLiked}
+                                createComment={createComment}
+                                getComments={getComments}
+                                commentCount={tiktok.account.commentCount.toNumber()}
+                            />
+                        })}
+                    </div>
+                    <BottomBar
+                        setNewVideoShow={setNewVideoShow}
+                        getTiktoks={getTiktoks}
+                    />
+                </div>
             ) : (
                 <Signup signup={signup} wallet={wallet.publicKey?.toBase58()} />)}
         </>
