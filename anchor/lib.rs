@@ -39,7 +39,7 @@ mod hello_anchor {
                         video_url:String,
                         creator_name:String,
                         creator_url:String)->ProgramResult{
-let video : &mut Account<VideoAccount> = &mut ctx.accounts.video;
+        let video : &mut Account<VideoAccount> = &mut ctx.accounts.video;
         video.authority = ctx.accounts.authority.key();
         video.description = description;
         video.video_url = video_url;
@@ -49,7 +49,27 @@ let video : &mut Account<VideoAccount> = &mut ctx.accounts.video;
         video.creator_time = ctx.accounts.clock.unix_timestamp;
         video.likes =0;
         Ok(())
-                        }
+    }
+
+    pub fn create_comment(ctx:Context<CreateComment>
+                         ,text:String,commenter_name:String
+                         ,commerter_url:String)->ProgramResult{
+        let video:&mut Account<VideoAccount> = &mut ctx.accounts.video;
+        let comment :&mut Account<CommentAccount> = &mut ctx.accounts.comment;
+        comment.authority = ctx.accounts.authority.key();
+        comment.commenter_name = commenter_name;
+        comment.commerter_url = commenter_url;
+        comment.text = text;
+        comment.index = video.comment_count;
+        comment.video_time = ctx.accounts.clock.unix_timestamp;
+        video.comment_count +=1;
+        Ok(())
+        }
+
+    pub fn like_video(ctx:Context<CreateLike>)->ProgramResult{
+        let video: &mut Account<VideoAccount> = &mut ctx.accounts.video;
+        let like:&mut Account<LikeAccount> = &mut ctx.account.like;
+    }
 }
 
 #[derive(Accounts)]
@@ -101,6 +121,47 @@ pub struct CreateVideo<'info> {
     pub clock:Sysvar<'info,Clock>
 }
 
+#[derive(Account)]
+pub struct CreateComment<'info>{
+
+    #[account(mut)]
+    pub video:Account<VideoAccount>,
+    #[account(
+        init,
+        seeds=[b"comment".as_ref(),video.key().as_ref(),video.comment_count.to_be_bytes().as_ref()],
+        bump,
+        payer = authority,
+        space = size_of::<CommentAccount>() + Text_Length + User_Name_Length + User_Url_Length 
+        + Video_Url_Length)]
+   pub comment:Account<CommentAccount>,
+    
+    #[account(mut)]
+    pub authority:Signer<'info>,
+    
+    pub system_program:UncheckedAccount<'info,System>,
+
+    pub clock:Sysvar<'info,Clock>
+}
+
+#[derive(Account)]
+pub struct CreateLike<'info>{
+    #[account(mut)]
+    pub video:Account<VideoAccount>,
+    #[account(
+        init,
+        seed=[b"like".as_ref(),video.key().as_ref()],
+        bump,
+    payer = authority,
+    space)]
+    pub like:Account<LikeAccount>,
+     #[account(mut)]
+    pub authority:Signer<'info>,
+    
+    pub system_program:UncheckedAccount<'info,System>,
+
+    pub clock:Sysvar<'info,Clock>
+}
+
 #[account]
 pub struct UserAccount {
     pub user_name:String,
@@ -121,5 +182,21 @@ pub struct VideoAccount {
     pub people_liked:Vec<Pubkey>,
     pub likes:u8,
     pub remove:i64
+    
+}
+
+#[account]
+pub struct CommentAccount{
+    pub authority:Pubkey,
+    pub text:String,
+    pub commenter_name :String,
+    pub commerter_url :String,
+    pub index:u64,
+    pub video_time:i64
+}
+
+#[account]
+pub struct LikeAccount{
+     pub authority:Pubkey,
     
 }
