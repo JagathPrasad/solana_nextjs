@@ -32,7 +32,14 @@ const useTiktok = (setTiktoks, userDetail, videoUrl, description,
     }
 
     const likeVideo = async (address) => {
-
+        console.log('video liked');
+        const tx = await program.rpc.likeVideo({
+            accounts: {
+                video: new PublicKey(address),
+                authority: wallet.publicKey,
+                ...defaultAccounts
+            },
+        })
     }
 
     const createComment = async (address, count, comment) => {
