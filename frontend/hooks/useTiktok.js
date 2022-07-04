@@ -4,6 +4,7 @@ import { useWallet } from "@solana/wallet-adapter-react";
 import { PublicKey } from "@solana/web3.js";
 import { getProgramInstance } from "../utils/utils";
 import { SOLANA_HOST } from "../utils/const";
+import { publicKey } from "@project-serum/anchor/dist/cjs/utils";
 
 
 const anchor = require('@project-serum/anchor');
@@ -49,7 +50,16 @@ const useTiktok = (setTiktoks, userDetail, videoUrl, description,
         )
 
         if (userDetail) {
-
+            const tx = await program.rpc.createComment(
+                comment, userDetail.userName, userDetail.userProfileImageUrl, {
+                accounts: {
+                    video: new publicKey(address),
+                    comment: comment_pda,
+                    authority: wallet.publicKey,
+                    ...defaultAccounts
+                }
+            }
+            )
         }
     }
 
@@ -75,7 +85,18 @@ const useTiktok = (setTiktoks, userDetail, videoUrl, description,
     }
 
     const getComments = async (address, count) => {
-
+        let commentSigners = [];
+        for (let i = 0; i < count; i++) {
+            let [commentSigner] = await anchor.web3.publicKey.findProgramAddress(
+                [utf8.encode('comment'), new PublicKey(address).toBuffer(), new BN(count).toArrayLike(Buffer, 'be', 8)],
+                program.programId
+            )
+            commentSigners.push(commentSigner);
+        }
+        const comments = await program.account.commentAccount.fetchMultiple(
+            commentSigners,
+        )
+        return comments;
     }
 
     return { getTiktoks, likeVideo, createComment, newVideo, getComments };

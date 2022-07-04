@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import styles from '../styles/comment.module.css';
 import { useWallet } from '@solana/wallet-adapter-react';
-
+import {CommentCard} from './CommentCard';
 const Comments = ({
     address,
     onHide,
