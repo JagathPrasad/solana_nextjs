@@ -43,7 +43,14 @@ const useTiktok = (setTiktoks, userDetail, videoUrl, description,
     }
 
     const createComment = async (address, count, comment) => {
+        let [comment_pda] = await anchor.web3.publicKey.findProgramAddress(
+            [utf8.encode('comment'), new PublicKey(address).toBuffer(), new BN(count).toArrayLike(Buffer, 'be', 8)],
+            program.programId
+        )
 
+        if (userDetail) {
+
+        }
     }
 
     const newVideo = async () => {
