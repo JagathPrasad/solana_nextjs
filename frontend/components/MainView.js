@@ -49,7 +49,7 @@ const MainView = () => {
     }, [wallet.connected]);
 
 
-    const checkAccount = () => {
+    const checkAccount = async() => {
         let [user_pda] = await anchor.web3.PublicKey.findProgramAddress(
             [utf8.encode('user'), wallet.publicKey.toBuffer()],
             program.programId

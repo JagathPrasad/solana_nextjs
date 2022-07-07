@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import styles from './styles/sidebar.module.css';
+import styles from '../styles/sidebar.module.css';
 import FavoriteIcon from '@material-ui/icons/Favorite';
 import MessageIcon from '@material-ui/icons/Message';
 import ShareIcon from '@material-ui/icons/Share';

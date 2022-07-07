@@ -3,7 +3,7 @@ import { useRef, useState } from 'react';
 import Comments from './Comments';
 import Sidebar from './Sidebar';
 import Footer from './Footer';
-import styles from './styles/video.module.css'
+import styles from '../styles/video.module.css'
 
 
 const Video = ({
