@@ -6,20 +6,12 @@ use anchor_lang::solana_program::log::{
 };
 // This is your program's public key and it will update
 // automatically when you build the project.
-declare_id!("Rkv9eZwXuDZezacPK5SRSQyqbaYKa7upXuF4kr949ri");
-
-
-const User_Name_Length: usize = 100;
-const Video_Url_Length: usize = 225;
-const User_Url_Length: usize = 225;
-
-const Text_Length: usize = 1024;
-const Number_Of_Allowed_Likes_Space: usize = 5;
+declare_id!("HcGLXnAygikVMjcQJVaSdMnJvkKcytKRUzqjPrkmKZBh");
 
 #[program]
 mod hello_anchor {
     use super::*;
-   pub fn create_user(
+     pub fn create_user(
        ctx:Context<CreateUser>,
        name:String,
        profile_url:String) -> ProgramResult {
@@ -33,8 +25,7 @@ mod hello_anchor {
        
         Ok(())
    }
-
-    pub fn create_video(ctx:Context<CreateVideo>,
+     pub fn create_video(ctx:Context<CreateVideo>,
                         description:String,
                         video_url:String,
                         creator_name:String,
@@ -50,7 +41,7 @@ mod hello_anchor {
         video.likes =0;
         Ok(())
     }
-
+    
     pub fn create_comment(ctx:Context<CreateComment>
                          ,text:String,commenter_name:String
                          ,commenter_url:String)->ProgramResult{
@@ -65,16 +56,6 @@ mod hello_anchor {
         video.comment_count +=1;
         Ok(())
         }
-
-    pub fn like_video(ctx:Context<LikeVideo>)->ProgramResult{
-        let video: &mut Account<VideoAccount> = &mut ctx.accounts.video;
-
-        let mut iter= video.people_liked.iter();
-        let user_liking_video = ctx.accounts.authority.key();
-        video.likes += 1;
-        video.people_liked.push(user_liking_video);
-        Ok(())
-    }
 }
 
 #[derive(Accounts)]
@@ -88,7 +69,7 @@ pub struct CreateUser<'info> {
         seeds = [b"user".as_ref(),authority.key().as_ref()],
         bump,
         payer = authority,
-        space = size_of::<UserAccount>() + User_Name_Length + Video_Url_Length + 8 )]
+        space = size_of::<UserAccount>() + 100 + 225 + 8 )]
     pub user:Account<'info,UserAccount>,
 
     #[account(mut)]
@@ -98,8 +79,6 @@ pub struct CreateUser<'info> {
 
     pub clock:Sysvar<'info,Clock>
 }
-
-
 #[derive(Accounts)]
 pub struct CreateVideo<'info> {
     // We must specify the space in order to initialize an account.
@@ -111,8 +90,8 @@ pub struct CreateVideo<'info> {
         seeds = [b"video".as_ref(),randomkey.key().as_ref()],
         bump,
         payer = authority,
-        space = size_of::<VideoAccount>() + Text_Length + User_Name_Length +User_Url_Length 
-        + Video_Url_Length + 8 +32 + Number_Of_Allowed_Likes_Space )]
+        space = size_of::<VideoAccount>() + 1024 + 100 +225 
+        + 225 + 8 +32 + 5 )]
     pub video:Account<'info,VideoAccount>,
 
     #[account(mut)]
@@ -136,8 +115,8 @@ pub struct CreateComment<'info>{
         seeds=[b"comment".as_ref(),video.key().as_ref(),video.comment_count.to_be_bytes().as_ref()],
         bump,
         payer = authority,
-        space = size_of::<CommentAccount>() + Text_Length + User_Name_Length + User_Url_Length 
-        + Video_Url_Length)]
+        space = size_of::<CommentAccount>() + 1024 + 100 + 225 
+        + 225)]
    pub comment:Account<'info,CommentAccount>,
     
     #[account(mut)]
@@ -148,18 +127,6 @@ pub struct CreateComment<'info>{
     pub clock:Sysvar<'info,Clock>
 }
 
-#[derive(Accounts)]
-pub struct LikeVideo<'info>{
-    #[account(mut)]
-    pub video:Account<'info,VideoAccount>,
-   
-    #[account(mut)]
-    pub authority:Signer<'info>,
-    
-    pub system_program:UncheckedAccount<'info>,
-
-    pub clock:Sysvar<'info,Clock>
-}
 
 #[account]
 pub struct UserAccount {
@@ -192,10 +159,4 @@ pub struct CommentAccount{
     pub commerter_url :String,
     pub index:u64,
     pub video_time:i64
-}
-
-#[account]
-pub struct LikeAccount{
-     pub authority:Pubkey,
-    
 }
