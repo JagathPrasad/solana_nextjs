@@ -1,15 +1,26 @@
 use anchor_lang::prelude::*;
-
-pub mod constant;
-pub mod error;
-pub mod states;
-use crate::{constant::*, error::*, states::*};
+use std::mem::size_of;
+//pub mod constant;
+//pub mod error;
+//pub mod states;
+//use crate::{constant::*, error::*, states::*};
 // This is your program's public key and it will update
 // automatically when you build the project.
-declare_id!("6GWRcTdPQ17Uh6SkQs23i855nRzzHi3hrQTbZkiWhzZH");
+declare_id!("DmF7mJHxQBDNhvUzTA2aeNqEuroChziWifxSxAym7xPF");
+#[constant]
+pub const USER_TAG: &[u8] = b"USER_STATE";
+
+#[constant]
+pub const TODO_TAG: &[u8] = b"TODO_STATE";
+
+#[error_code]
+pub enum TodoError {
+    #[msg("Already Marked")]
+    AlreadyMarked,
+}
 
 #[program]
-pub mod solana_todo {
+mod hello_anchor {
     use super::*;
     pub fn initialize_user(ctx: Context<InitializeUser>) -> Result<()> {
         let user_profile = &mut ctx.accounts.user_profile;
@@ -18,7 +29,6 @@ pub mod solana_todo {
         user_profile.todo_count = 0;
         Ok(())
     }
-
     pub fn add_todo(ctx: Context<AddTodo>, _content: String) -> Result<()> {
         let todo_account = &mut ctx.accounts.todo_account;
         let user_profile = &mut ctx.accounts.user_profile;
@@ -55,7 +65,7 @@ pub struct InitializeUser<'info> {
     #[account(mut)]
     pub authority: Signer<'info>,
     #[account(init,seeds=[USER_TAG,authority.key().as_ref()],bump, payer = authority, 
-              space = 8 + std::mem:size_of::<UserProfile>())]
+              space = 8 + size_of::<UserProfile>())]
     pub user_profile: Box<Account<'info, UserProfile>>,
     pub system_program: Program<'info, System>,
 }
@@ -63,12 +73,21 @@ pub struct InitializeUser<'info> {
 #[derive(Accounts)]
 #[instruction()]
 pub struct AddTodo<'info> {
-    #[account(mut,seeds=[USER_TAG,authority.key.as_ref()],bump,has_one=authority)]
+    #[account(
+              mut,
+              seeds=[USER_TAG,authority.key.as_ref()],
+              bump,
+              has_one=authority,
+             )]
     pub user_profile: Box<Account<'info, UserProfile>>,
-    #[account(mut,seeds=[TODO_TAG,authority.key.as_ref(),&[user_profile.last_todo.as_u8].as_ref()],bump
-              ,payer=authority,space=8+ std::mem::size_of::<TodoAccout>())]
+    #[account(
+              init,
+              seeds=[TODO_TAG,authority.key.as_ref(),&mut[user_profile.last_todo as u8].as_ref()],
+              bump,
+              payer = authority,
+              space = size_of::<TodoAccount>() + 8 ,
+             )]
     pub todo_account: Box<Account<'info, TodoAccount>>,
-
     #[account(mut)]
     pub authority: Signer<'info>,
     pub system_program: Program<'info, System>,
@@ -77,10 +96,17 @@ pub struct AddTodo<'info> {
 #[derive(Accounts)]
 #[instruction(todo_idx:u8)]
 pub struct MarkTodo<'info> {
-    #[account(mut,seeds=[USER_TAG,authority.key.as_ref()],bump,has_one=authority)]
+    #[account(mut,
+              seeds=[USER_TAG,authority.key.as_ref()],
+              bump,
+              has_one=authority
+             )]
     pub user_profile: Box<Account<'info, UserProfile>>,
-
-    #[account(mut,seeds=[TODO_TAG,authority.key.as_ref(),&[todo_idx].as_ref()],bump,has_one = authority)]
+    #[account(
+        mut,
+        seeds=[TODO_TAG,authority.key.as_ref(),&mut[todo_idx].as_ref()],
+        bump,
+        has_one = authority)]
     pub todo_account: Box<Account<'info, TodoAccount>>,
     #[account(mut)]
     pub authority: Signer<'info>,
@@ -90,12 +116,39 @@ pub struct MarkTodo<'info> {
 #[derive(Accounts)]
 #[instruction(todo_idx:u8)]
 pub struct RemoveTodo<'info> {
-    #[account(mut,seeds=[USER_TAG,authority.key.as_ref()],bump,has_one=authority)]
+    #[account(
+        mut,
+        seeds=[USER_TAG,authority.key.as_ref()],
+        bump,
+        has_one=authority
+    )]
     pub user_profile: Box<Account<'info, UserProfile>>,
 
-    #[account(mut,seeds=[TODO_TAG,authority.key.as_ref(),&[todo_idx].as_ref()],bump,has_one = authority)]
+    #[account(
+        mut,
+        seeds=[TODO_TAG,authority.key.as_ref(),&mut[todo_idx].as_ref()],
+        bump,
+        has_one = authority
+    )]
     pub todo_account: Box<Account<'info, TodoAccount>>,
     #[account(mut)]
     pub authority: Signer<'info>,
     pub system_program: Program<'info, System>,
+}
+
+#[account]
+#[derive(Default)]
+pub struct UserProfile {
+    pub authority: Pubkey,
+    pub last_todo: u8,
+    pub todo_count: u8,
+}
+
+#[account]
+#[derive(Default)]
+pub struct TodoAccount {
+    pub authority: Pubkey,
+    pub idx: u8,
+    pub content: String,
+    pub marked: bool,
 }
