@@ -12,11 +12,12 @@ pub struct UserProfile {
 #[account]
 #[derive(Default)]
 pub struct AirbnbAccount{
+    pub idx:u8,
     pub authority:Pubkey,
     pub location:String,
     pub country:String,
     pub price:String,
     pub image:String,
-    pub isResolved:bool
+    pub isReserved:bool
 
 }
